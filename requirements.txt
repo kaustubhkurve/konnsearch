@@ -1,0 +1,4 @@
+confluent-kafka==2.5.3
+opensearch-py==2.7.1
+
+ipdb
