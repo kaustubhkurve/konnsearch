@@ -22,9 +22,10 @@ class KafkaSourceConnector(SourceConnector):
     that polls for messages until there is a keyboard interrupt
     or an exception and return an iterator for the consumed events
     """
-    def __init__(self, config, topics):
+    def __init__(self, config, topics, poll_timeout=1):
         self.consumer = Consumer(config)
         self.topics = topics
+        self.poll_timeout = poll_timeout
         self.consumer.subscribe(self.topics)
 
     def events(self):
@@ -35,12 +36,10 @@ class KafkaSourceConnector(SourceConnector):
         It consumes the subscribed topics from the Kafka cluster.
         Returns an iterator that yield a consumed cdc event
         one at a time.
-
-        TODO: Parameterize the poll timeout
         """
         try:
             while True:
-                message = self.consumer.poll(1)
+                message = self.consumer.poll(self.poll_timeout)
                 if message is None:
                     print("poll timed out, continuing")
                     continue
