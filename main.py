@@ -1,9 +1,11 @@
 import os
 
-from src.connect import Connection
-from src.connectors.file import JSONSourceConnector
-from src.connectors.kafka import KafkaSinkConnector, KafkaSourceConnector
-from src.connectors.opensearch import OpenSearchSinkConnector
+from src.konnsearch.connect import Connection
+from src.konnsearch.connectors.file import JSONSourceConnector
+from src.konnsearch.connectors.kafka import (
+    KafkaSinkConnector, KafkaSourceConnector
+)
+from src.konnsearch.connectors.opensearch import OpenSearchSinkConnector
 
 if __name__ == "__main__":
     kconfig = {
