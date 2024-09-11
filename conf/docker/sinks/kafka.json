@@ -1,0 +1,6 @@
+{
+    "config": {
+	"bootstrap.servers": "kafka:29092"
+    },
+    "topic": "cdc-events"
+}

@@ -1,0 +1,6 @@
+{
+    "host": "localhost",
+    "port": "9200",
+    "index_name": "cdc",
+    "batchsize": 10
+}

@@ -1,0 +1,6 @@
+{
+    "config": {
+	"bootstrap.servers": "localhost:9092"
+    },
+    "topic": "cdc-events"
+}
