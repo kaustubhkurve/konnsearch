@@ -1,0 +1,9 @@
+{
+    "config": {
+	"bootstrap.servers": "kafka:29092",
+	"group.id": "konnconsumer",
+	"auto.offset.reset": "earliest"
+    },
+    "topics": ["cdc-events"],
+    "poll_timeout": 1
+}

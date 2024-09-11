@@ -1,0 +1,9 @@
+{
+    "config": {
+	"bootstrap.servers": "localhost:9092",
+	"group.id": "konnconsumer",
+	"auto.offset.reset": "earliest"
+    },
+    "topics": ["cdc-events"],
+    "poll_timeout": 1
+}
