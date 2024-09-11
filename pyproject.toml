@@ -1,0 +1,28 @@
+[project]
+name = "konnsearch"
+version = "0.1.0"
+description = "A connector framework to sync cdc events from source to sink connectors"
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+maintainers = [{name = "Kaustubh Kurve", email = "kaustubh6024@gmail.com"}]
+requires-python = ">=3.10"
+dependencies = [
+    'Click',
+    "confluent-kafka==2.5.3",
+    "opensearch-py==2.7.1",
+    "pytest==8.3.2",
+]
+
+[project.scripts]
+konnsearch = "konnsearch.cli:cli"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = "src"
+filterwarnings = [
+    "error",
+]
