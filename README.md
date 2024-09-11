@@ -28,6 +28,14 @@ The connectors are implemented under `konnsearch/connectors` package. The follow
 The connector contract allows any source to connect to any sink. Hence events can be moved from one kafka topic to another by simply
 using the KafkaSourceConnector as source and KafkaSinkConnector as a sink. New source and sink connectors can be added to support other workflows.
 
+A basic CLI is implemented that makes it easier to execute the workflows. The cli requires config files for source and sink connectors.
+The config files for local and docker based setup can be found under `conf` directory.
+
+The general invocation of the cli is:
+```
+konnsearch sync --source <source-name> --sink <sink-name> --source-config <path-to-source-config> --sink-config <path-to-sink-config>
+```
+
 ## Getting started
 
 ### Setting up the environment
@@ -38,9 +46,9 @@ virtualenv .venv
 source .venv/bin/activate
 ```
 
-2. Install dependencies
+2. Install konnsearch
 ```
-pip install -r requirements.txt
+pip install --editable .
 ```
 
 3. Start services (Kafka, opensearch)
@@ -58,9 +66,15 @@ Opensearch is accessible locally at `localhost:9200` or `opensearch-node:9200` f
 
 1. Make sure the virtualenv is activated
 
-2. Run the `kafka_ingest.py` script to publish the cdc events from the jsonl file to Kafka (Topic: `cdc-events`)
+2. To ingest the events to Kafka from the jsonl file, run:
+```
+konnsearch sync --source json --sink kafka --source-config conf/local/sources/jsonl.json --sink-config conf/local/sinks/kafka.json
+```
 
-3. Run the `opensearch_index.py` script to consume cdc events from Kafka and index them to opensearch (Index: `cdc`)
+3. To index the events to Opensearch, run:
+```
+konnsearch sync --source kafka --sink opensearch --source-config conf/local/sources/kafka.json --sink-config conf/local/sinks/opensearch.json
+```
 
 4. Kafka UI can be used to inspect the messages in the Kafka topic
 
@@ -73,7 +87,7 @@ curl localhost:9200/cdc/_search
 
 The project uses pytest for testing. To run the test suite, execute:
 ```
-PYTHONPATH=src pytest
+pytest
 ```
 
 ### Shutdown
