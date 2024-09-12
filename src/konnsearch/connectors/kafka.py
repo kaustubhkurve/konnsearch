@@ -47,8 +47,11 @@ class KafkaSourceConnector(SourceConnector):
                 if message.error():
                     raise KafkaException(message.error())
 
-                event = message.value().decode("utf-8")
-                yield Event(event)
+                eventdata = message.value().decode("utf-8")
+                event = Event(eventdata)
+                print("Consumed event: {}".format(event.key))
+
+                yield event
 
         except KeyboardInterrupt:
             pass

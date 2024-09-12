@@ -48,6 +48,8 @@ class OpenSearchSinkConnector(SinkConnector):
         result = self.client.bulk(self._bulk_body(events))
         if result["errors"]:
             print("Errors during bulk operation", result)
+        else:
+            print("Indexed {} events".format(len(events)))
 
     def publish(self, stream):
         """
