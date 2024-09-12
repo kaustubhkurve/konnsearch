@@ -22,7 +22,7 @@ class KafkaSourceConnector(SourceConnector):
 
     Primarily, this is simple librdkafka based consumer
     that polls for messages until there is a keyboard interrupt
-    or an exception and return an iterator for the consumed events
+    or an exception and return an iterator for the consumed events.
     """
     def __init__(self, config, topics, poll_timeout=1):
         self.consumer = Consumer(config)
@@ -31,25 +31,27 @@ class KafkaSourceConnector(SourceConnector):
 
         self.consumer.subscribe(self.topics)
 
-    def consumeloop(self, publisher, batchsize):
+    def _consume(self, publisher, max_batchsize):
         """
-        The consumer loop for the Kafka consumer.
-
-        It consumes the subscribed topics from the Kafka cluster and
+        Consumes the subscribed topics from the Kafka cluster and
         builds the batch sizes based on the sink preference.
         It calls the sink's publish method to publish events to
         the sink.
+
+        Note: It passes the current batch to sink, if the batch hasn't
+        been filled in (5 * poll_timeout duration) to ensure progress.
         """
-        batch, cycle = [], datetime.now()
+        start, batch = datetime.now(), []
+        max_elapsed_time = timedelta(seconds=5*self.poll_timeout)
 
         try:
             while True:
                 currlen = len(batch)
-                threshold = cycle + timedelta(seconds=10 * self.poll_timeout)
-                if (currlen > 0) \
-                   and ((currlen >= batchsize) or (datetime.now() > threshold)):
-                    publisher(batch)
-                    batch = []
+                if (currlen > 0):
+                    if (currlen >= max_batchsize) \
+                       or (datetime.now() > (start + max_elapsed_time)):
+                        publisher(batch)
+                        start, batch = datetime.now(), []
 
                 message = self.consumer.poll(self.poll_timeout)
                 if message is None:
@@ -60,8 +62,7 @@ class KafkaSourceConnector(SourceConnector):
                     raise KafkaException(message.error())
 
                 eventdata = message.value().decode("utf-8")
-                event = Event(eventdata)
-                batch.append(event)
+                batch.append(Event(eventdata))
 
         except KeyboardInterrupt:
             pass
@@ -74,7 +75,7 @@ class KafkaSourceConnector(SourceConnector):
         The transfer_to method pulls the events from source and
         calls the sink's publish endpoint.
         """
-        self.consumeloop(sink.publish, sink.get_batch_size())
+        self._consume(sink.publish, sink.get_batch_size())
 
 
 class KafkaSinkConnector(SinkConnector):
