@@ -19,8 +19,8 @@ class OpenSearchSinkConnector(SinkConnector):
     """
     def __init__(self, host, port, index_name, batchsize=10):
         self.client = OpenSearch(hosts=[{
-            host: host,
-            port: port
+            "host": host,
+            "port": port
         }])
 
         self.index_name = index_name
