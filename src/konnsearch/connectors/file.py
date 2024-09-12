@@ -7,6 +7,7 @@ import os
 
 from ..event import Event
 from ..connect import SourceConnector
+from ..helpers import batched
 
 
 class JSONSourceConnector(SourceConnector):
@@ -29,3 +30,11 @@ class JSONSourceConnector(SourceConnector):
         with open(self.path) as f:
             for line in f:
                 yield Event(line)
+
+    def transfer_to(self, sink):
+        """
+        The transfer_to method pulls the events from source and
+        calls the sink's publish endpoint.
+        """
+        for events in batched(self.events(), sink.get_batch_size()):
+            sink.publish(events)

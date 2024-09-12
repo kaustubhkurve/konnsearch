@@ -2,5 +2,6 @@
     "config": {
 	"bootstrap.servers": "kafka:29092"
     },
-    "topic": "cdc-events"
+    "topic": "cdc-events",
+    "batchsize": 50
 }

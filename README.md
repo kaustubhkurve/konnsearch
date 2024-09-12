@@ -132,8 +132,7 @@ docker compose down
 
 ## Improvements
 
-1. Currently, because of batching on iterable, the opensearch bulk index operation for the last batch of entries (if batch is not filled), happens after a keyboard interrupt. This needs to be addressed.
-2. Centralised logging
+1. Centralised logging
 
 ## Resources
 

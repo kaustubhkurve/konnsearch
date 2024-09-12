@@ -16,9 +16,12 @@ class SourceConnector(ABC):
     by the concrete source connectors
     """
     @abstractmethod
-    def events(self):
+    def transfer_to(self, sink):
         """
-        The events method should return an iterator for the events
+        The transfer_to method implements the transfer of events from
+        the source to sink.
+        Internally, the source would need to call the sink's publish method
+        to publish events.
         """
         pass
 
@@ -31,8 +34,17 @@ class SinkConnector(ABC):
     @abstractmethod
     def publish(self, events):
         """
-        The publish method takes an events iterator and
+        The publish method takes a list of events and
         publishes the events to the corresponding sink
+        """
+        pass
+
+    @abstractmethod
+    def get_batch_size(self):
+        """
+        Return the batch size recommended by the sink.
+        This allows the source connector to pull the
+        appropriate number of events, and send them to the sink
         """
         pass
 
@@ -53,12 +65,5 @@ class Connection:
         """
         The sync method creates a connection between the source and
         sink connectors.
-
-        Currently, it simply passes the events iterator from the
-        source connector to the sink connector.
-
-        This allows the sink connector to get events based on it's
-        needs.
         """
-        eventstream = self.source.events()
-        self.sink.publish(eventstream)
+        self.source.transfer_to(self.sink)

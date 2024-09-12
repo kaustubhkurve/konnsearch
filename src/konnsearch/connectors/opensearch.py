@@ -5,7 +5,6 @@ The opensearch module imlpements Opensearch connectors.
 import json
 
 from ..connect import SinkConnector
-from ..helpers import batched
 
 from opensearchpy import OpenSearch
 
@@ -51,10 +50,15 @@ class OpenSearchSinkConnector(SinkConnector):
         else:
             print("Indexed {} events".format(len(events)))
 
-    def publish(self, stream):
+    def get_batch_size(self):
+        """
+        Returns the batch size for the buik requests
+        """
+        return self.batchsize
+
+    def publish(self, events):
         """
         Implements the publish contract for the opensearch sink connector.
         It consumes the source stream, and indexes the events to opensearch.
         """
-        for events in batched(stream, self.batchsize):
-            self._bulk_index(events)
+        self._bulk_index(events)

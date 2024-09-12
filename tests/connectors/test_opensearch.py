@@ -29,7 +29,5 @@ def test_opensearch_sink_connector(osmock, sample_events, index_body):
     os_sink.publish(eventstream)
     osinstance_mock.bulk.assert_called()
     osinstance_mock.bulk.assert_has_calls([
-        call("\n".join([index_body] * 5) + "\n"),
-        call("\n".join([index_body] * 5) + "\n"),
-        call("\n".join([index_body] * 2) + "\n")
+        call("\n".join([index_body] * 12) + "\n")
     ], any_order=False)

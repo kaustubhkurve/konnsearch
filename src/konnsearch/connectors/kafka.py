@@ -8,6 +8,8 @@ are executed in C context, and it allows us to offload a lot
 of concurrency primitives (ex: producer queue) to librdkafka.
 """
 
+from datetime import datetime, timedelta
+
 from ..event import Event
 from ..connect import SourceConnector, SinkConnector
 
@@ -26,19 +28,29 @@ class KafkaSourceConnector(SourceConnector):
         self.consumer = Consumer(config)
         self.topics = topics
         self.poll_timeout = poll_timeout
+
         self.consumer.subscribe(self.topics)
 
-    def events(self):
+    def consumeloop(self, publisher, batchsize):
         """
-        The events method implements the source connection
-        events contract.
+        The consumer loop for the Kafka consumer.
 
-        It consumes the subscribed topics from the Kafka cluster.
-        Returns an iterator that yield a consumed cdc event
-        one at a time.
+        It consumes the subscribed topics from the Kafka cluster and
+        builds the batch sizes based on the sink preference.
+        It calls the sink's publish method to publish events to
+        the sink.
         """
+        batch, cycle = [], datetime.now()
+
         try:
             while True:
+                currlen = len(batch)
+                threshold = cycle + timedelta(seconds=10 * self.poll_timeout)
+                if (currlen > 0) \
+                   and ((currlen >= batchsize) or (datetime.now() > threshold)):
+                    publisher(batch)
+                    batch = []
+
                 message = self.consumer.poll(self.poll_timeout)
                 if message is None:
                     print("poll timed out, continuing")
@@ -49,15 +61,20 @@ class KafkaSourceConnector(SourceConnector):
 
                 eventdata = message.value().decode("utf-8")
                 event = Event(eventdata)
-                print("Consumed event: {}".format(event.key))
-
-                yield event
+                batch.append(event)
 
         except KeyboardInterrupt:
             pass
 
         finally:
             self.consumer.close()
+
+    def transfer_to(self, sink):
+        """
+        The transfer_to method pulls the events from source and
+        calls the sink's publish endpoint.
+        """
+        self.consumeloop(sink.publish, sink.get_batch_size())
 
 
 class KafkaSinkConnector(SinkConnector):
@@ -80,9 +97,10 @@ class KafkaSinkConnector(SinkConnector):
     the log and ignore model, but the connector could be extended to support
     others.
     """
-    def __init__(self, config, topic):
+    def __init__(self, config, topic, batchsize):
         self.topic = topic
         self.producer = Producer(config)
+        self.batchsize = batchsize
 
     def __kcallback(self):
         """
@@ -102,7 +120,10 @@ class KafkaSinkConnector(SinkConnector):
 
         return cb
 
-    def publish(self, stream):
+    def get_batch_size(self):
+        return self.batchsize
+
+    def publish(self, events):
         """
         Implements the publish contract for the Kafka sink connector.
         It consumes the source stream, and publishes the events to Kafka.
@@ -110,7 +131,7 @@ class KafkaSinkConnector(SinkConnector):
         The cdc object key serves as the message key, and entire json is
         considered the value.
         """
-        for event in stream:
+        for event in events:
             self.producer.produce(
                 self.topic, key=event.key, value=event.raw,
                 on_delivery=self.__kcallback()

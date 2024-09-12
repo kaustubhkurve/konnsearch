@@ -15,6 +15,4 @@ def test_connection():
 
     connection.sync()
 
-    source.events.assert_called_once()
-    sink.publish.assert_called_once()
-    sink.publish.assert_called_with(iterator)
+    source.transfer_to.assert_called_once()

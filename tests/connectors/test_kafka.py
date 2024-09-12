@@ -35,12 +35,15 @@ def test_kafka_source_connector(
         topics=["test"]
     )
 
-    result = list(k_source.events())
+    sink_mock = MagicMock()
+    sink_mock.configure_mock(**{"get_batch_size.return_value": 2})
+
+    k_source.transfer_to(sink_mock)
 
     consumerinstance_mock.subscribe.assert_called_once()
     consumerinstance_mock.poll.assert_called()
     consumerinstance_mock.close.assert_called()
-    assert [r.parsed for r in result] == [sample_event] * 2
+    sink_mock.publish.assert_called()
 
 
 @patch("konnsearch.connectors.kafka.Consumer")
@@ -62,8 +65,11 @@ def test_kafka_source_connector_on_error(consumermock):
         topics=["test"]
     )
 
+    sink_mock = MagicMock()
+    sink_mock.configure_mock(**{"get_batch_size.return_value": 2})
+
     with pytest.raises(KafkaException):
-        list(k_source.events())
+        k_source.transfer_to(sink_mock)
 
         consumerinstance_mock.subscribe.assert_called_once()
         consumerinstance_mock.poll.assert_called()
@@ -75,7 +81,8 @@ def test_kafka_sink_connector(producermock, sample_events):
     producerinstance_mock = producermock.return_value
     k_sink = KafkaSinkConnector(
         config={"bootstrap.servers": "localhost"},
-        topic="test"
+        topic="test",
+        batchsize=10
     )
 
     eventstream = [Event(json.dumps(ev)) for ev in sample_events]
