@@ -10,6 +10,8 @@ services:
     environment:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+    networks:
+      - konnsearch
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -18,6 +20,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - konnsearch
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -38,6 +42,8 @@ services:
       KAFKA_DELETE_TOPIC_ENABLE: 'false'
       KAFKA_ADVERTISED_HOST_NAME: 'kafka'
       KAFKA_MESSAGE_MAX_BYTES: '200000000'
+    networks:
+      - konnsearch
 
   init-kafka:
     image: confluentinc/cp-kafka:latest
@@ -52,6 +58,8 @@ services:
       echo -e 'Creating kafka topics'
       kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic cdc-events --replication-factor 1 --partitions 1
       "
+    networks:
+      - konnsearch
 
   opensearch-node:
     image: opensearchproject/opensearch:latest
@@ -77,6 +85,8 @@ services:
     ports:
       - "9200:9200" # REST API
       - "9600:9600" # Performance Analyzer
+    networks:
+      - konnsearch
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:latest
@@ -88,6 +98,12 @@ services:
     environment:
       - 'OPENSEARCH_HOSTS=["http://opensearch-node:9200"]'
       - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+    networks:
+      - konnsearch
 
 volumes:
   opensearch-data:
+
+networks:
+  konnsearch:
+    name: konnsearch

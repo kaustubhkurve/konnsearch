@@ -2,5 +2,5 @@
     "host": "opensearch-node",
     "port": "9200",
     "index_name": "cdc",
-    "batchsize": 10
+    "batchsize": 100
 }
