@@ -64,6 +64,8 @@ Opensearch is accessible locally at `localhost:9200` or `opensearch-node:9200` f
 
 ### Usage
 
+#### Running from local
+
 1. Make sure the virtualenv is activated
 
 2. To ingest the events to Kafka from the jsonl file, run:
@@ -81,6 +83,37 @@ konnsearch sync --source kafka --sink opensearch --source-config conf/local/sour
 4. To query the opensearch API and check the indexed events, execute the following search request:
 ```
 curl localhost:9200/cdc/_search
+```
+
+#### Running from a docker container
+
+A simple dockerfile is present in the repository that can be used to build the konnsearch image. You can run konnsearch commands from within the container.
+
+Notes:
+
+1. The docker compose file is updated to add a specific network name (konnsearch) to all services defined in docker-compose.yaml. This allows us to attach our konnsearch container to the common network for it to be able to access all services.
+2. The configuration files for docker setup are under `conf/docker`. Please ensure that config files are provided to konnsearch from the appropriate configuration directory.
+
+##### Steps
+
+1. Build the konnsearch image
+```
+docker build  . -t konnsearch:0.1.0
+```
+
+2. Run the konnsearch image in interactive mode (and attaching it to konnsearch network), and drop into the container shell
+```
+docker run -it --network konnsearch konnsearch:0.1.0 /bin/bash
+```
+
+3. To ingest the events to Kafka from the jsonl file, run:
+```
+konnsearch sync --source json --sink kafka --source-config conf/docker/sources/jsonl.json --sink-config conf/docker/sinks/kafka.json
+```
+
+4. To index the events to Opensearch, run:
+```
+konnsearch sync --source kafka --sink opensearch --source-config conf/docker/sources/kafka.json --sink-config conf/docker/sinks/opensearch.json
 ```
 
 ### Tests
